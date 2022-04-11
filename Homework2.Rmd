@@ -1,8 +1,8 @@
 ---
 title: "Homework2"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
 ```{r}
 library(tidymodels)
@@ -24,7 +24,7 @@ abalone %>%
   theme_bw()
 ```
 
-The distribution of age seems unsymmetrical and is right skewed
+The distribution of age seems unsymmetrical and is a bit of a right skewed. Also, the most count age is around 11.
 
 ### Question 2 
 ```{r}
@@ -44,7 +44,7 @@ simple_abalone_recipe <-
   step_center(all_predictors()) %>%
   step_scale(all_predictors())
 ```
-We should not use rings to predict age because we use rings to caculate age. When we use rings to predict age our R^2 will becomes to 1
+We should not use rings to predict age because we use rings to caculate age. When we use rings to predict age, our R^2 will becomes 1 even we do not include other predictors in our model. Therefore, our model is not meanful when we include rings.
 
 
 ### Question 4
