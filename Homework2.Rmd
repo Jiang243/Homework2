@@ -1,8 +1,108 @@
 ---
 title: "Homework2"
 output:
-  html_document: default
   pdf_document: default
+  html_document: default
 ---
+```{r}
+library(tidymodels)
+library(tidyverse)
+abalone <- read.csv("abalone.csv")
+```
 
-test
+### Question 1
+```{r}
+# add age variable to the dataset
+abalone <- abalone %>% 
+  mutate(age = rings + 1.5)
+```
+```{r}
+# make a histogram to assess the distribution of age
+abalone %>% 
+  ggplot(aes(x=age)) +
+  geom_histogram(bins=30)+
+  theme_bw()
+```
+
+The distribution of age seems unsymmetrical and is right skewed
+
+### Question 2 
+```{r}
+set.seed(1979)
+abalone_split <- initial_split(abalone, prop = 0.8,
+                                strata = age)
+abalone_train <- training(abalone_split)
+abalone_test <- testing(abalone_split)
+```
+
+### Question 3
+```{r}
+simple_abalone_recipe <-
+  recipe(age ~ ., data = abalone_train %>% select(-rings)) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_interact(~ shucked_weight:starts_with("type") + longest_shell:diameter + shucked_weight:shell_weight) %>% 
+  step_center(all_predictors()) %>%
+  step_scale(all_predictors())
+```
+We should not use rings to predict age because we use rings to caculate age. When we use rings to predict age our R^2 will becomes to 1
+
+
+### Question 4
+```{r}
+lm_model <- linear_reg() %>% 
+  set_engine("lm")
+```
+
+### Question 5 
+```{r}
+lm_wflow <- workflow() %>% 
+  add_model(lm_model) %>% 
+  add_recipe(simple_abalone_recipe)
+```
+
+### Question 6
+```{r}
+lm_fit <- fit(lm_wflow,abalone_train)
+```
+```{r}
+lm_fit %>% 
+  extract_fit_parsnip() %>% 
+  tidy()
+```
+```{r}
+abalone2 <- data.frame(type = 'F',longest_shell = 0.50, diameter = 0.10, height = 0.30, whole_weight = 4, shucked_weight = 1, viscera_weight = 2, shell_weight = 1)
+predict_age <- predict(lm_fit, abalone2)
+predict_age
+```
+
+### Question 7
+```{r}
+library(yardstick)
+abalone_metrics <- metric_set(rmse,rsq,mae)
+```
+```{r}
+abalone_train_res <- predict(lm_fit, new_data = abalone_train %>% select(-rings,-age))
+abalone_train_res %>% head()
+```
+```{r}
+abalone_train_res <- bind_cols(abalone_train_res,abalone_train %>% select(age))
+abalone_train_res %>% head()
+```
+```{r}
+abalone_metrics(abalone_train_res, truth = age, 
+                estimate = .pred)
+```
+R^2 is 0.5633, which means 56.33% of the variability in Y(age) that can be explained by using X
+
+
+
+
+
+
+
+
+
+
+
+
+
